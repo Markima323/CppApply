@@ -10,6 +10,8 @@
 
   const form = document.querySelector("#generator-form");
   const clearButton = document.querySelector("#clear-button");
+  const executeButton = document.querySelector("#execute-button");
+  const executeButtonLabel = document.querySelector("#execute-button-label");
   const copyButton = document.querySelector("#copy-button");
   const copyButtonLabel = document.querySelector("#copy-button-label");
   const formMessage = document.querySelector("#form-message");
@@ -29,6 +31,10 @@
   let copiedCode = "";
   let resetButtonTimer = 0;
   let storageWarningShown = false;
+
+  function extensionAvailable() {
+    return Boolean(globalThis.chrome && chrome.runtime && chrome.runtime.id);
+  }
 
   function currentMode() {
     const checked = form.querySelector('input[name="mode"]:checked');
@@ -139,13 +145,13 @@
     copyButtonLabel.textContent = "已复制完整代码 ✓";
     resetButtonTimer = window.setTimeout(() => {
       copyButton.classList.remove("is-success");
-      copyButtonLabel.textContent = "生成并复制代码";
+      copyButtonLabel.textContent = "仅生成并复制代码";
     }, 2200);
   }
 
   function markContentChanged() {
     copyButton.classList.remove("is-success");
-    copyButtonLabel.textContent = "生成并复制代码";
+    copyButtonLabel.textContent = "仅生成并复制代码";
 
     if (copiedCode) {
       setMessage("资料已更改，请重新生成并复制代码。", "info");
@@ -213,9 +219,7 @@
     return legacyCopy(text);
   }
 
-  form.addEventListener("submit", async (event) => {
-    event.preventDefault();
-
+  function prepareExecution() {
     const mode = currentMode();
     const validation = generator.validateInput(mode, readValues());
     showErrors(validation.errors);
@@ -226,18 +230,86 @@
       const firstInvalid = form.querySelector('[aria-invalid="true"]');
       if (firstInvalid) firstInvalid.focus();
       refreshPreview();
-      return;
+      return null;
     }
 
     const code = generator.generateCode(mode, validation.values);
     preview.value = code;
     saveFormDefaults();
-    const copied = await copyText(code);
+    return { mode, validation, code };
+  }
+
+  function requestExtensionExecution(mode, values) {
+    return new Promise((resolve, reject) => {
+      chrome.runtime.sendMessage(
+        {
+          type: "allcpp:open-and-execute",
+          mode,
+          values
+        },
+        (response) => {
+          const runtimeError = chrome.runtime.lastError;
+          if (runtimeError) {
+            reject(new Error(runtimeError.message));
+            return;
+          }
+          resolve(response);
+        }
+      );
+    });
+  }
+
+  executeButton.addEventListener("click", async () => {
+    const prepared = prepareExecution();
+    if (!prepared) return;
+
+    if (!extensionAvailable()) {
+      setMessage("自动执行需要先把当前目录加载为 Chrome 扩展。复制功能仍可正常使用。", "error");
+      return;
+    }
+
+    executeButton.disabled = true;
+    executeButtonLabel.textContent = "正在打开并等待执行…";
+    setMessage("正在打开 ALLCPP 管理页面，加载完成后会自动执行。", "info");
+
+    try {
+      const response = await requestExtensionExecution(
+        prepared.mode,
+        prepared.validation.values
+      );
+
+      if (!response || response.ok !== true) {
+        throw new Error((response && response.error) || "扩展没有返回执行结果。");
+      }
+
+      const success = response.result && response.result.success;
+      setMessage(
+        success === true
+          ? "ALLCPP 返回申请成功，详细结果已显示在目标页面。"
+          : "执行已经结束，详细回复已显示在目标页面。",
+        success === true ? "success" : "info"
+      );
+    } catch (error) {
+      setMessage(`自动执行失败：${error.message}`, "error");
+    } finally {
+      executeButton.disabled = false;
+      executeButtonLabel.textContent = "打开 ALLCPP 并立即执行";
+    }
+  });
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const prepared = prepareExecution();
+    if (!prepared) return;
+    const copied = await copyText(prepared.code);
 
     if (copied) {
-      copiedCode = code;
+      copiedCode = prepared.code;
       setCopyButtonSuccess();
-      setMessage(`已复制“${generator.MODE_META[mode].label}”完整代码。`, "success");
+      setMessage(
+        `已复制“${generator.MODE_META[prepared.mode].label}”完整代码。`,
+        "success"
+      );
       return;
     }
 

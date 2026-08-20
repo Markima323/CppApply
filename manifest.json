@@ -1,0 +1,20 @@
+{
+  "manifest_version": 3,
+  "minimum_chrome_version": "102",
+  "name": "ALLCPP 申摊助手",
+  "version": "1.1.0",
+  "description": "生成申摊代码，并在 ALLCPP 管理页面中执行申请和展示服务器回复。",
+  "permissions": [
+    "scripting",
+    "tabs"
+  ],
+  "host_permissions": [
+    "https://www.allcpp.cn/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "打开 ALLCPP 申摊助手"
+  }
+}

@@ -231,10 +231,16 @@
 
             <div class="form-message" id="form-message" role="status" aria-live="polite"></div>
 
-            <button class="primary-button" id="copy-button" type="submit">
-              <span class="button-icon" aria-hidden="true">⧉</span>
-              <span id="copy-button-label">生成并复制代码</span>
-            </button>
+            <div class="action-buttons">
+              <button class="primary-button" id="execute-button" type="button">
+                <span class="button-icon" aria-hidden="true">↗</span>
+                <span id="execute-button-label">打开 ALLCPP 并立即执行</span>
+              </button>
+              <button class="secondary-button" id="copy-button" type="submit">
+                <span class="button-icon" aria-hidden="true">⧉</span>
+                <span id="copy-button-label">仅生成并复制代码</span>
+              </button>
+            </div>
           </form>
         </section>
 
@@ -263,15 +269,15 @@
           <div class="notice-card">
             <span class="notice-icon" aria-hidden="true">!</span>
             <p>
-              复制后请先核对代码。在已登录的 ALLCPP 活动页面控制台中运行时，
-              <strong>会立即发起真实申请</strong>。请勿把含个人资料的代码发送给他人。
+              “打开 ALLCPP 并立即执行”会在目标页面加载后
+              <strong>直接发起真实申请</strong>，并显示服务器回复。执行前请核对资料。
             </p>
           </div>
 
           <ol class="usage-steps">
-            <li><span>1</span>登录 ALLCPP 并打开对应活动页面</li>
-            <li><span>2</span>打开浏览器开发者工具的 Console</li>
-            <li><span>3</span>粘贴已复制的代码并执行</li>
+            <li><span>1</span>先在浏览器中登录 ALLCPP</li>
+            <li><span>2</span>填写资料后点击“打开 ALLCPP 并立即执行”</li>
+            <li><span>3</span>在目标页面查看执行结果提示框</li>
           </ol>
         </section>
       </div>

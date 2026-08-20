@@ -5,6 +5,8 @@
 *.local
 *.private
 *.secret
+*.pem
+*.crx
 private/
 secrets/
 local-data/
@@ -34,3 +36,4 @@ desktop.ini
 
 # Node.js（当前项目无依赖，预留）
 node_modules/
+dist/
