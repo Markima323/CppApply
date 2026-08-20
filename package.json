@@ -1,0 +1,9 @@
+{
+  "name": "allcpp-apply-code-generator",
+  "version": "1.0.0",
+  "private": true,
+  "description": "本地生成并复制 ALLCPP 申摊代码的零依赖面板。",
+  "scripts": {
+    "test": "node --test"
+  }
+}

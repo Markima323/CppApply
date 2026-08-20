@@ -1,0 +1,303 @@
+(function () {
+  "use strict";
+
+  const generator = globalThis.AllcppCodeGenerator;
+  const preferences = globalThis.AllcppPreferences;
+
+  if (!generator || !preferences) {
+    throw new Error("页面功能模块加载失败。");
+  }
+
+  const form = document.querySelector("#generator-form");
+  const clearButton = document.querySelector("#clear-button");
+  const copyButton = document.querySelector("#copy-button");
+  const copyButtonLabel = document.querySelector("#copy-button-label");
+  const formMessage = document.querySelector("#form-message");
+  const preview = document.querySelector("#code-preview");
+  const modeBadge = document.querySelector("#mode-badge");
+  const updateOnlyField = document.querySelector(".mode-only-update");
+  const circleInput = document.querySelector("#circle-id");
+  const identityInput = document.querySelector("#contact-identity");
+  const identityToggle = document.querySelector("#identity-toggle");
+  const browserStorage = (() => {
+    try {
+      return window.localStorage;
+    } catch {
+      return null;
+    }
+  })();
+  let copiedCode = "";
+  let resetButtonTimer = 0;
+  let storageWarningShown = false;
+
+  function currentMode() {
+    const checked = form.querySelector('input[name="mode"]:checked');
+    return checked ? checked.value : generator.MODES.APPLY;
+  }
+
+  function readValues() {
+    const data = new FormData(form);
+    return {
+      eventMainId: data.get("eventMainId"),
+      doujinshiid: data.get("doujinshiid"),
+      agentuserid: data.get("agentuserid"),
+      circleid: data.get("circleid"),
+      conname: data.get("conname"),
+      conidentity: data.get("conidentity"),
+      contel: data.get("contel"),
+      conemail: data.get("conemail")
+    };
+  }
+
+  function setMessage(message, type) {
+    formMessage.textContent = message;
+    formMessage.className = "form-message";
+
+    if (message && type) {
+      formMessage.classList.add(`is-${type}`);
+    }
+  }
+
+  function saveFormDefaults() {
+    const result = preferences.saveDefaults(browserStorage, currentMode(), readValues());
+
+    if (!result.ok && !storageWarningShown) {
+      storageWarningShown = true;
+      setMessage("浏览器阻止了本机自动保存；本次填写仍可正常生成和复制。", "error");
+    }
+
+    return result.ok;
+  }
+
+  function restoreFormDefaults() {
+    const result = preferences.loadDefaults(browserStorage);
+
+    if (!result.ok) {
+      storageWarningShown = true;
+      return { restored: false, unavailable: true };
+    }
+
+    if (!result.found) {
+      return { restored: false, unavailable: false };
+    }
+
+    const { mode, values } = result.snapshot;
+    const modeInput = form.querySelector(`input[name="mode"][value="${mode}"]`);
+    if (modeInput) modeInput.checked = true;
+
+    for (const name of preferences.FIELD_NAMES) {
+      const input = form.elements.namedItem(name);
+      if (input instanceof HTMLInputElement) {
+        input.value = values[name];
+      }
+    }
+
+    return { restored: true, unavailable: false };
+  }
+
+  function clearErrors() {
+    form.querySelectorAll(".field.has-error").forEach((field) => {
+      field.classList.remove("has-error");
+    });
+    form.querySelectorAll(".field-error").forEach((element) => {
+      element.textContent = "";
+    });
+    form.querySelectorAll("[aria-invalid]").forEach((input) => {
+      input.removeAttribute("aria-invalid");
+    });
+  }
+
+  function clearFieldError(name) {
+    const wrapper = form.querySelector(`[data-field="${name}"]`);
+    if (!wrapper) return;
+
+    wrapper.classList.remove("has-error");
+    const input = wrapper.querySelector("input");
+    const error = wrapper.querySelector(".field-error");
+    if (input) input.removeAttribute("aria-invalid");
+    if (error) error.textContent = "";
+  }
+
+  function showErrors(errors) {
+    clearErrors();
+
+    Object.entries(errors).forEach(([name, message]) => {
+      const wrapper = form.querySelector(`[data-field="${name}"]`);
+      if (!wrapper || wrapper.hidden) return;
+
+      wrapper.classList.add("has-error");
+      const input = wrapper.querySelector("input");
+      const error = wrapper.querySelector(".field-error");
+      if (input) input.setAttribute("aria-invalid", "true");
+      if (error) error.textContent = message;
+    });
+  }
+
+  function setCopyButtonSuccess() {
+    window.clearTimeout(resetButtonTimer);
+    copyButton.classList.add("is-success");
+    copyButtonLabel.textContent = "已复制完整代码 ✓";
+    resetButtonTimer = window.setTimeout(() => {
+      copyButton.classList.remove("is-success");
+      copyButtonLabel.textContent = "生成并复制代码";
+    }, 2200);
+  }
+
+  function markContentChanged() {
+    copyButton.classList.remove("is-success");
+    copyButtonLabel.textContent = "生成并复制代码";
+
+    if (copiedCode) {
+      setMessage("资料已更改，请重新生成并复制代码。", "info");
+      copiedCode = "";
+    } else if (formMessage.classList.contains("is-success")) {
+      setMessage("", "");
+    }
+  }
+
+  function updateModeUi() {
+    const mode = currentMode();
+    const isUpdate = mode === generator.MODES.UPDATE;
+    updateOnlyField.hidden = !isUpdate;
+    circleInput.required = isUpdate;
+    modeBadge.textContent = generator.MODE_META[mode].label;
+    clearFieldError("circleid");
+    refreshPreview();
+  }
+
+  function refreshPreview() {
+    const mode = currentMode();
+    const validation = generator.validateInput(mode, readValues());
+
+    if (!validation.valid) {
+      preview.value = `// 当前模式：${generator.MODE_META[mode].label}\n// 填写全部必填资料后，这里会显示完整代码。`;
+      return null;
+    }
+
+    const code = generator.generateCode(mode, validation.values);
+    preview.value = code;
+    return code;
+  }
+
+  function legacyCopy(text) {
+    const helper = document.createElement("textarea");
+    helper.value = text;
+    helper.setAttribute("readonly", "");
+    helper.style.position = "fixed";
+    helper.style.left = "-9999px";
+    helper.style.top = "0";
+    document.body.appendChild(helper);
+    helper.focus();
+    helper.select();
+
+    let copied = false;
+    try {
+      copied = document.execCommand("copy");
+    } finally {
+      helper.remove();
+    }
+
+    return copied;
+  }
+
+  async function copyText(text) {
+    if (navigator.clipboard && window.isSecureContext) {
+      try {
+        await navigator.clipboard.writeText(text);
+        return true;
+      } catch {
+        // 浏览器拒绝 Clipboard API 时继续尝试兼容方案。
+      }
+    }
+
+    return legacyCopy(text);
+  }
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+
+    const mode = currentMode();
+    const validation = generator.validateInput(mode, readValues());
+    showErrors(validation.errors);
+
+    if (!validation.valid) {
+      const count = Object.keys(validation.errors).length;
+      setMessage(`还有 ${count} 项资料需要检查。`, "error");
+      const firstInvalid = form.querySelector('[aria-invalid="true"]');
+      if (firstInvalid) firstInvalid.focus();
+      refreshPreview();
+      return;
+    }
+
+    const code = generator.generateCode(mode, validation.values);
+    preview.value = code;
+    saveFormDefaults();
+    const copied = await copyText(code);
+
+    if (copied) {
+      copiedCode = code;
+      setCopyButtonSuccess();
+      setMessage(`已复制“${generator.MODE_META[mode].label}”完整代码。`, "success");
+      return;
+    }
+
+    preview.focus();
+    preview.select();
+    setMessage("浏览器未允许自动复制，代码已全选，请按 Ctrl+C 手动复制。", "error");
+  });
+
+  form.addEventListener("input", (event) => {
+    const target = event.target;
+    if (target instanceof HTMLInputElement && target.name) {
+      clearFieldError(target.name);
+    }
+    markContentChanged();
+    saveFormDefaults();
+    refreshPreview();
+  });
+
+  form.addEventListener("change", (event) => {
+    if (event.target instanceof HTMLInputElement && event.target.name === "mode") {
+      markContentChanged();
+      updateModeUi();
+      saveFormDefaults();
+    }
+  });
+
+  clearButton.addEventListener("click", () => {
+    const storageCleared = preferences.clearDefaults(browserStorage);
+    form.reset();
+    clearErrors();
+    copiedCode = "";
+    setMessage(
+      storageCleared.ok
+        ? "已清空表单，并删除当前浏览器保存的默认资料。"
+        : "表单已清空，但浏览器未允许删除本机保存资料。",
+      storageCleared.ok ? "info" : "error"
+    );
+    identityInput.type = "password";
+    identityToggle.textContent = "显示";
+    identityToggle.setAttribute("aria-label", "显示身份证号");
+    identityToggle.setAttribute("aria-pressed", "false");
+    updateModeUi();
+    form.querySelector("input:not([type=radio])").focus();
+  });
+
+  identityToggle.addEventListener("click", () => {
+    const show = identityInput.type === "password";
+    identityInput.type = show ? "text" : "password";
+    identityToggle.textContent = show ? "隐藏" : "显示";
+    identityToggle.setAttribute("aria-label", show ? "隐藏身份证号" : "显示身份证号");
+    identityToggle.setAttribute("aria-pressed", String(show));
+    identityInput.focus();
+  });
+
+  const restoreState = restoreFormDefaults();
+  updateModeUi();
+
+  if (restoreState.restored) {
+    setMessage("已自动载入上次保存的默认资料。", "success");
+  } else if (restoreState.unavailable) {
+    setMessage("浏览器阻止了本机自动保存；填写和复制功能仍可正常使用。", "error");
+  }
+})();

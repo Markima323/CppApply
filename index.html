@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="在本地生成并复制 ALLCPP 申摊或退摊后更新申请代码。"
+    />
+    <title>ALLCPP 申摊代码生成器</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="hero">
+        <div class="brand-mark" aria-hidden="true">摊</div>
+        <div>
+          <p class="eyebrow">LOCAL CODE HELPER</p>
+          <h1>ALLCPP 申摊代码生成器</h1>
+          <p class="hero-copy">
+            填好申请资料，一键生成对应模式的完整代码并复制到剪贴板。
+          </p>
+        </div>
+        <div class="privacy-pill" title="资料会保存在当前浏览器的本地存储中">
+          <span class="privacy-dot" aria-hidden="true"></span>
+          本机自动保存
+        </div>
+      </header>
+
+      <div class="workspace">
+        <section class="panel form-panel" aria-labelledby="form-title">
+          <div class="panel-heading">
+            <div>
+              <p class="step-label">01 / 填写资料</p>
+              <h2 id="form-title">申请设置</h2>
+            </div>
+            <button
+              class="text-button"
+              id="clear-button"
+              type="button"
+              title="清空表单并删除当前浏览器保存的默认资料"
+            >
+              清空保存
+            </button>
+          </div>
+
+          <form id="generator-form" novalidate autocomplete="off">
+            <fieldset class="mode-fieldset">
+              <legend>选择操作类型</legend>
+              <div class="mode-options">
+                <label class="mode-card">
+                  <input type="radio" name="mode" value="apply" checked />
+                  <span class="mode-control" aria-hidden="true"></span>
+                  <span>
+                    <strong>申摊</strong>
+                    <small>首次提交摊位申请</small>
+                  </span>
+                </label>
+                <label class="mode-card">
+                  <input type="radio" name="mode" value="update" />
+                  <span class="mode-control" aria-hidden="true"></span>
+                  <span>
+                    <strong>已退摊更新为申请</strong>
+                    <small>更新已有或已退摊记录</small>
+                  </span>
+                </label>
+              </div>
+            </fieldset>
+
+            <div class="section-title">
+              <span>活动与账号</span>
+              <span class="required-note"><i aria-hidden="true">*</i> 必填</span>
+            </div>
+
+            <div class="field-grid">
+              <div class="field field-wide" data-field="eventMainId">
+                <label for="event-main-id">
+                  活动主页链接 <span aria-hidden="true">*</span>
+                </label>
+                <input
+                  id="event-main-id"
+                  name="eventMainId"
+                  type="text"
+                  maxlength="2048"
+                  placeholder="例如 https://www.allcpp.cn/allcpp/event/event.do?event=7214"
+                  required
+                  aria-describedby="event-main-id-hint event-main-id-error"
+                />
+                <p class="field-hint" id="event-main-id-hint">
+                  链接中的 <code>event</code> 参数会被自动识别。
+                </p>
+                <p class="field-error" id="event-main-id-error"></p>
+              </div>
+
+              <div class="field" data-field="doujinshiid">
+                <label for="doujinshi-id">
+                  随意一个展品链接 <span aria-hidden="true">*</span>
+                </label>
+                <input
+                  id="doujinshi-id"
+                  name="doujinshiid"
+                  type="text"
+                  maxlength="2048"
+                  placeholder="例如 allcpp.cn/d/1412772.do"
+                  required
+                  aria-describedby="doujinshi-id-hint doujinshi-id-error"
+                />
+                <p class="field-hint" id="doujinshi-id-hint">
+                  将自动提取链接中的展品 ID，也兼容直接填写数字 ID。
+                </p>
+                <p class="field-error" id="doujinshi-id-error"></p>
+              </div>
+
+              <div class="field" data-field="agentuserid">
+                <label for="agent-user-id">
+                  UID <span aria-hidden="true">*</span>
+                </label>
+                <input
+                  id="agent-user-id"
+                  name="agentuserid"
+                  type="text"
+                  inputmode="numeric"
+                  maxlength="40"
+                  placeholder="请输入 UID"
+                  required
+                  aria-describedby="agent-user-id-error"
+                />
+                <p class="field-error" id="agent-user-id-error"></p>
+              </div>
+
+              <div class="field field-wide mode-only-update" data-field="circleid" hidden>
+                <label for="circle-id">
+                  社团页面链接 <span aria-hidden="true">*</span>
+                </label>
+                <input
+                  id="circle-id"
+                  name="circleid"
+                  type="text"
+                  maxlength="2048"
+                  placeholder="例如 https://www.allcpp.cn/c/3005850.do"
+                  aria-describedby="circle-id-hint circle-id-error"
+                />
+                <p class="field-hint" id="circle-id-hint">
+                  将自动提取链接中的社团 ID，也兼容直接填写数字 ID。
+                </p>
+                <p class="field-error" id="circle-id-error"></p>
+              </div>
+            </div>
+
+            <div class="section-title contact-title">
+              <span>联系人资料</span>
+              <span class="local-note">本机自动保存</span>
+            </div>
+
+            <div class="field-grid">
+              <div class="field" data-field="conname">
+                <label for="contact-name">
+                  姓名 <span aria-hidden="true">*</span>
+                </label>
+                <input
+                  id="contact-name"
+                  name="conname"
+                  type="text"
+                  maxlength="80"
+                  placeholder="请输入联系人姓名"
+                  required
+                  aria-describedby="contact-name-error"
+                />
+                <p class="field-error" id="contact-name-error"></p>
+              </div>
+
+              <div class="field" data-field="conidentity">
+                <label for="contact-identity">
+                  身份证号 <span aria-hidden="true">*</span>
+                </label>
+                <div class="input-with-action">
+                  <input
+                    id="contact-identity"
+                    name="conidentity"
+                    type="password"
+                    maxlength="64"
+                    placeholder="请输入身份证号"
+                    required
+                    aria-describedby="contact-identity-error"
+                  />
+                  <button
+                    class="input-action"
+                    id="identity-toggle"
+                    type="button"
+                    aria-label="显示身份证号"
+                    aria-pressed="false"
+                  >
+                    显示
+                  </button>
+                </div>
+                <p class="field-error" id="contact-identity-error"></p>
+              </div>
+
+              <div class="field" data-field="contel">
+                <label for="contact-tel">
+                  联系电话 <span aria-hidden="true">*</span>
+                </label>
+                <input
+                  id="contact-tel"
+                  name="contel"
+                  type="tel"
+                  maxlength="32"
+                  placeholder="请输入联系电话"
+                  required
+                  aria-describedby="contact-tel-error"
+                />
+                <p class="field-error" id="contact-tel-error"></p>
+              </div>
+
+              <div class="field" data-field="conemail">
+                <label for="contact-email">
+                  电子邮箱 <span aria-hidden="true">*</span>
+                </label>
+                <input
+                  id="contact-email"
+                  name="conemail"
+                  type="email"
+                  maxlength="254"
+                  placeholder="name@example.com"
+                  required
+                  aria-describedby="contact-email-error"
+                />
+                <p class="field-error" id="contact-email-error"></p>
+              </div>
+            </div>
+
+            <div class="form-message" id="form-message" role="status" aria-live="polite"></div>
+
+            <button class="primary-button" id="copy-button" type="submit">
+              <span class="button-icon" aria-hidden="true">⧉</span>
+              <span id="copy-button-label">生成并复制代码</span>
+            </button>
+          </form>
+        </section>
+
+        <section class="panel preview-panel" aria-labelledby="preview-title">
+          <div class="panel-heading preview-heading">
+            <div>
+              <p class="step-label">02 / 核对代码</p>
+              <h2 id="preview-title">代码预览</h2>
+            </div>
+            <span class="mode-badge" id="mode-badge">申摊</span>
+          </div>
+
+          <div class="preview-shell">
+            <div class="window-bar" aria-hidden="true">
+              <span></span><span></span><span></span>
+              <p>allcpp-apply.js</p>
+            </div>
+            <textarea
+              id="code-preview"
+              readonly
+              spellcheck="false"
+              aria-label="生成的 JavaScript 代码"
+            >// 填写左侧必填资料后，这里会显示完整代码。</textarea>
+          </div>
+
+          <div class="notice-card">
+            <span class="notice-icon" aria-hidden="true">!</span>
+            <p>
+              复制后请先核对代码。在已登录的 ALLCPP 活动页面控制台中运行时，
+              <strong>会立即发起真实申请</strong>。请勿把含个人资料的代码发送给他人。
+            </p>
+          </div>
+
+          <ol class="usage-steps">
+            <li><span>1</span>登录 ALLCPP 并打开对应活动页面</li>
+            <li><span>2</span>打开浏览器开发者工具的 Console</li>
+            <li><span>3</span>粘贴已复制的代码并执行</li>
+          </ol>
+        </section>
+      </div>
+
+      <footer>
+        <p>页面不联网；输入会保存在当前浏览器本机，不会上传，也不会代替你提交申请。</p>
+      </footer>
+    </main>
+
+    <script src="generator.js"></script>
+    <script src="storage.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>

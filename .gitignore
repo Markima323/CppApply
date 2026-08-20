@@ -1,0 +1,36 @@
+# 本地隐私资料与密钥
+.env
+.env.*
+!.env.example
+*.local
+*.private
+*.secret
+private/
+secrets/
+local-data/
+
+# 导出或生成的含个人资料代码
+generated/
+exports/
+*.generated.js
+*.private.js
+
+# 测试、截图与临时文件
+coverage/
+*.log
+*.tmp
+*.temp
+screenshots/
+*-preview.png
+.codex-*
+.tmp-*
+
+# 编辑器与操作系统文件
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Node.js（当前项目无依赖，预留）
+node_modules/
