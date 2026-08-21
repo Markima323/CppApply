@@ -85,6 +85,26 @@ async function executeAllcppFlow(request) {
     padding: "16px 24px 20px",
     borderTop: "1px solid #ebe8e0"
   });
+  const viewResultButton = makeElement(
+    "button",
+    {
+      display: "none",
+      minWidth: "150px",
+      height: "40px",
+      color: "#ffffff",
+      background: "#34745a",
+      border: "0",
+      borderRadius: "10px",
+      padding: "0 18px",
+      fontSize: "13px",
+      fontWeight: "800",
+      cursor: "pointer"
+    },
+    "点击查看申摊结果"
+  );
+  viewResultButton.addEventListener("click", () => {
+    window.location.href = "https://www.allcpp.cn/mng/apply.do?t=1&pageNo=1";
+  });
   const closeButton = makeElement(
     "button",
     {
@@ -102,7 +122,7 @@ async function executeAllcppFlow(request) {
     "关闭"
   );
   closeButton.addEventListener("click", () => overlay.remove());
-  footer.append(closeButton);
+  footer.append(viewResultButton, closeButton);
 
   card.append(header, content, footer);
   overlay.append(card);
@@ -128,6 +148,9 @@ async function executeAllcppFlow(request) {
       `抢摊结果：${succeeded ? "成功" : `失败：${failureReason}`}`
     ].join("\n");
     summary.style.display = "block";
+    viewResultButton.style.display = "inline-flex";
+    viewResultButton.style.alignItems = "center";
+    viewResultButton.style.justifyContent = "center";
   }
 
   try {
