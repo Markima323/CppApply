@@ -47,7 +47,7 @@ async function executeAllcppFlow(request) {
   const title = makeElement(
     "h2",
     { margin: "0", color: "#24231f", fontSize: "22px", lineHeight: "1.3" },
-    "正在抢摊…"
+    "正在申摊…"
   );
   header.append(title);
 
@@ -140,12 +140,12 @@ async function executeAllcppFlow(request) {
       (typeof result.response === "string" && result.response.trim()) ||
       (result.httpStatus ? `HTTP ${result.httpStatus}` : "服务器未返回明确的成功状态");
 
-    title.textContent = "抢摊结果";
+    title.textContent = "申摊结果";
     phase.style.display = "none";
     summary.textContent = [
       `操作类型：${result.modeLabel || "-"}`,
       `活动名称：${result.eventName || "未获取到"}`,
-      `抢摊结果：${succeeded ? "成功" : `失败：${failureReason}`}`
+      `申摊结果：${succeeded ? "成功" : `失败：${failureReason}`}`
     ].join("\n");
     summary.style.display = "block";
     viewResultButton.style.display = "inline-flex";

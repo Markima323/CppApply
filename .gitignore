@@ -19,6 +19,7 @@ exports/
 
 # 测试、截图与临时文件
 coverage/
+release/
 *.log
 *.tmp
 *.temp

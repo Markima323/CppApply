@@ -10,7 +10,7 @@ const manifest = JSON.parse(
 
 test("Chrome 扩展使用 Manifest V3 和后台 Service Worker", () => {
   assert.equal(manifest.manifest_version, 3);
-  assert.equal(manifest.description, "自动使用填写好的信息抢摊");
+  assert.equal(manifest.description, "自动使用填写好的信息申摊");
   assert.equal(manifest.background.service_worker, "background.js");
   assert.equal(manifest.action.default_title, "打开 ALLCPP自动申摊器");
 });
@@ -38,9 +38,10 @@ test("面板只包含自动执行按钮且不使用字符串 eval 注入", () =>
   );
 
   assert.match(html, /id="execute-button"/);
-  assert.match(html, /点击打开ALLCPP抢摊/);
+  assert.match(html, /点击打开ALLCPP申摊/);
   assert.doesNotMatch(html, /id="copy-button"/);
   assert.doesNotMatch(html, /id="code-preview"/);
+  assert.doesNotMatch(html, /(?:event=|allcpp\.cn\/[dc]\/)[0-9]+/);
   assert.match(html, /id="validation-list"/);
   assert.match(background, /chrome\.scripting\.executeScript/);
   assert.doesNotMatch(background, /\beval\s*\(/);
@@ -54,7 +55,7 @@ test("完成后的结果框只展示指定的三项结果", () => {
 
   assert.match(runner, /操作类型：/);
   assert.match(runner, /活动名称：/);
-  assert.match(runner, /抢摊结果：/);
+  assert.match(runner, /申摊结果：/);
   assert.doesNotMatch(runner, /服务器完整回复/);
   assert.doesNotMatch(runner, /实际 eventId：/);
 });

@@ -69,7 +69,7 @@
 
     if (!result.ok && !storageWarningShown) {
       storageWarningShown = true;
-      setMessage("浏览器阻止了本机自动保存；本次填写仍可正常执行抢摊。", "error");
+      setMessage("浏览器阻止了本机自动保存；本次填写仍可正常执行申摊。", "error");
     }
 
     return result.ok;
@@ -141,7 +141,7 @@
 
   function markContentChanged() {
     if (formMessage.classList.contains("is-success")) {
-      setMessage("资料已更改，请重新执行抢摊。", "info");
+      setMessage("资料已更改，请重新执行申摊。", "info");
     }
   }
 
@@ -166,7 +166,7 @@
       validationIcon.textContent = "✓";
       validationTitle.textContent = "资料填写完成";
       validationDescription.textContent =
-        "所有必填信息格式正确，现在可以点击“点击打开ALLCPP抢摊”运行。";
+        "所有必填信息格式正确，现在可以点击“点击打开ALLCPP申摊”运行。";
       validationList.hidden = true;
       return validation;
     }
@@ -231,7 +231,7 @@
     if (!prepared) return;
 
     if (!extensionAvailable()) {
-      setMessage("抢摊功能需要先把当前目录加载为 Chrome 扩展。", "error");
+      setMessage("申摊功能需要先把当前目录加载为 Chrome 扩展。", "error");
       return;
     }
 
@@ -252,15 +252,15 @@
       const success = response.result && response.result.success;
       setMessage(
         success === true
-          ? "ALLCPP 返回抢摊成功，抢摊结果已显示在目标页面。"
-          : "执行已经结束，抢摊结果已显示在目标页面。",
+          ? "ALLCPP 返回申摊成功，申摊结果已显示在目标页面。"
+          : "执行已经结束，申摊结果已显示在目标页面。",
         success === true ? "success" : "info"
       );
     } catch (error) {
       setMessage(`自动执行失败：${error.message}`, "error");
     } finally {
       executeButton.disabled = false;
-      executeButtonLabel.textContent = "点击打开ALLCPP抢摊";
+      executeButtonLabel.textContent = "点击打开ALLCPP申摊";
     }
   });
 
@@ -319,6 +319,6 @@
   if (restoreState.restored) {
     setMessage("已自动载入上次保存的默认资料。", "success");
   } else if (restoreState.unavailable) {
-    setMessage("浏览器阻止了本机自动保存；填写和抢摊功能仍可正常使用。", "error");
+    setMessage("浏览器阻止了本机自动保存；填写和申摊功能仍可正常使用。", "error");
   }
 })();
