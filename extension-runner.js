@@ -44,40 +44,12 @@ async function executeAllcppFlow(request) {
     padding: "22px 24px 18px",
     borderBottom: "1px solid #ebe8e0"
   });
-  const headingWrap = makeElement("div");
-  const eyebrow = makeElement(
-    "p",
-    {
-      margin: "0 0 5px",
-      color: "#dd5b3e",
-      fontSize: "11px",
-      fontWeight: "800",
-      letterSpacing: "0.12em"
-    },
-    "ALLCPP APPLY RESULT"
-  );
   const title = makeElement(
     "h2",
     { margin: "0", color: "#24231f", fontSize: "22px", lineHeight: "1.3" },
-    "正在执行申请…"
+    "正在抢摊…"
   );
-  headingWrap.append(eyebrow, title);
-
-  const statusBadge = makeElement(
-    "span",
-    {
-      flex: "0 0 auto",
-      color: "#786126",
-      background: "#fff5d8",
-      border: "1px solid #ead9a5",
-      borderRadius: "999px",
-      padding: "7px 11px",
-      fontSize: "12px",
-      fontWeight: "800"
-    },
-    "执行中"
-  );
-  header.append(headingWrap, statusBadge);
+  header.append(title);
 
   const content = makeElement("div", { padding: "22px 24px" });
   const phase = makeElement(
@@ -104,34 +76,7 @@ async function executeAllcppFlow(request) {
     fontSize: "12px",
     lineHeight: "1.65"
   });
-  const responseLabel = makeElement(
-    "p",
-    {
-      display: "none",
-      margin: "18px 0 7px",
-      color: "#706e67",
-      fontSize: "11px",
-      fontWeight: "800",
-      letterSpacing: "0.08em"
-    },
-    "服务器完整回复"
-  );
-  const responseBox = makeElement("pre", {
-    display: "none",
-    maxHeight: "290px",
-    overflow: "auto",
-    margin: "0",
-    padding: "14px 15px",
-    color: "#d9dcd3",
-    background: "#20211e",
-    borderRadius: "12px",
-    whiteSpace: "pre-wrap",
-    overflowWrap: "anywhere",
-    fontFamily: '"Cascadia Code", Consolas, monospace',
-    fontSize: "11px",
-    lineHeight: "1.6"
-  });
-  content.append(phase, summary, responseLabel, responseBox);
+  content.append(phase, summary);
 
   const footer = makeElement("footer", {
     display: "flex",
@@ -167,60 +112,22 @@ async function executeAllcppFlow(request) {
     phase.textContent = text;
   }
 
-  function stringifyResponse(value) {
-    if (typeof value === "string") return value;
-    try {
-      return JSON.stringify(value, null, 2);
-    } catch {
-      return String(value);
-    }
-  }
-
   function renderResult(result) {
-    const failed = result.success === false || result.httpSuccess === false;
     const succeeded = result.success === true && result.httpSuccess !== false;
-    const stateText = succeeded ? "成功" : failed ? "失败" : "结果待确认";
-    const stateColor = succeeded ? "#34745a" : failed ? "#ba3d39" : "#786126";
-    const stateBackground = succeeded ? "#eaf6ef" : failed ? "#fff0ef" : "#fff5d8";
-    const stateBorder = succeeded ? "#bddfca" : failed ? "#efc4c1" : "#ead9a5";
+    const failureReason =
+      result.message ||
+      result.error ||
+      (typeof result.response === "string" && result.response.trim()) ||
+      (result.httpStatus ? `HTTP ${result.httpStatus}` : "服务器未返回明确的成功状态");
 
-    title.textContent = succeeded
-      ? "申请执行成功"
-      : failed
-        ? "申请执行失败"
-        : "申请请求已经完成";
-    statusBadge.textContent = stateText;
-    statusBadge.style.color = stateColor;
-    statusBadge.style.background = stateBackground;
-    statusBadge.style.borderColor = stateBorder;
-    phase.textContent = result.error
-      ? "执行过程中出现错误，请根据下方信息检查后重试。"
-      : "ALLCPP 已返回结果，请核对以下信息。";
-
-    const summaryLines = [
+    title.textContent = "抢摊结果";
+    phase.style.display = "none";
+    summary.textContent = [
       `操作类型：${result.modeLabel || "-"}`,
-      `活动名称：${result.eventName || "-"}`,
-      `活动主页 ID：${result.eventMainId || "-"}`,
-      `实际 eventId：${result.eventId || "-"}`,
-      `展品 ID：${result.doujinshiId || "-"}`
-    ];
-
-    if (result.circleId !== undefined) {
-      summaryLines.push(`社团 ID：${result.circleId || "-"}`);
-    }
-
-    summaryLines.push(
-      `HTTP 状态：${result.httpStatus || "-"}`,
-      `服务器消息：${result.message || result.error || "无"}`
-    );
-
-    summary.textContent = summaryLines.join("\n");
+      `活动名称：${result.eventName || "未获取到"}`,
+      `抢摊结果：${succeeded ? "成功" : `失败：${failureReason}`}`
+    ].join("\n");
     summary.style.display = "block";
-    responseLabel.style.display = "block";
-    responseBox.textContent = stringifyResponse(
-      result.response !== undefined ? result.response : { error: result.error || "未知错误" }
-    );
-    responseBox.style.display = "block";
   }
 
   try {

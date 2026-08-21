@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       name="description"
-      content="在本地生成并复制 ALLCPP 申摊或退摊后更新申请代码。"
+      content="通过 Chrome 扩展打开 ALLCPP 管理页面并执行申摊或退摊更新。"
     />
-    <title>ALLCPP 申摊代码生成器</title>
+    <title>ALLCPP自动申摊器</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
@@ -16,10 +16,7 @@
         <div class="brand-mark" aria-hidden="true">摊</div>
         <div>
           <p class="eyebrow">LOCAL CODE HELPER</p>
-          <h1>ALLCPP 申摊代码生成器</h1>
-          <p class="hero-copy">
-            填好申请资料，一键生成对应模式的完整代码并复制到剪贴板。
-          </p>
+          <h1>ALLCPP自动申摊器</h1>
         </div>
         <div class="privacy-pill" title="资料会保存在当前浏览器的本地存储中">
           <span class="privacy-dot" aria-hidden="true"></span>
@@ -53,7 +50,6 @@
                   <span class="mode-control" aria-hidden="true"></span>
                   <span>
                     <strong>申摊</strong>
-                    <small>首次提交摊位申请</small>
                   </span>
                 </label>
                 <label class="mode-card">
@@ -61,7 +57,6 @@
                   <span class="mode-control" aria-hidden="true"></span>
                   <span>
                     <strong>已退摊更新为申请</strong>
-                    <small>更新已有或已退摊记录</small>
                   </span>
                 </label>
               </div>
@@ -234,56 +229,53 @@
             <div class="action-buttons">
               <button class="primary-button" id="execute-button" type="button">
                 <span class="button-icon" aria-hidden="true">↗</span>
-                <span id="execute-button-label">打开 ALLCPP 并立即执行</span>
-              </button>
-              <button class="secondary-button" id="copy-button" type="submit">
-                <span class="button-icon" aria-hidden="true">⧉</span>
-                <span id="copy-button-label">仅生成并复制代码</span>
+                <span id="execute-button-label">点击打开ALLCPP抢摊</span>
               </button>
             </div>
           </form>
         </section>
 
-        <section class="panel preview-panel" aria-labelledby="preview-title">
-          <div class="panel-heading preview-heading">
+        <section class="panel status-panel" aria-labelledby="status-title">
+          <div class="panel-heading status-heading">
             <div>
-              <p class="step-label">02 / 核对代码</p>
-              <h2 id="preview-title">代码预览</h2>
+              <p class="step-label">02 / 资料检查</p>
+              <h2 id="status-title">填写状态</h2>
             </div>
             <span class="mode-badge" id="mode-badge">申摊</span>
           </div>
 
-          <div class="preview-shell">
-            <div class="window-bar" aria-hidden="true">
-              <span></span><span></span><span></span>
-              <p>allcpp-apply.js</p>
+          <div
+            class="validation-card is-incomplete"
+            id="validation-card"
+            role="status"
+            aria-live="polite"
+          >
+            <div class="validation-icon" id="validation-icon" aria-hidden="true">!</div>
+            <div class="validation-content">
+              <h3 id="validation-title">请完善申请资料</h3>
+              <p id="validation-description">正在检查必填信息和格式。</p>
+              <ul class="validation-list" id="validation-list"></ul>
             </div>
-            <textarea
-              id="code-preview"
-              readonly
-              spellcheck="false"
-              aria-label="生成的 JavaScript 代码"
-            >// 填写左侧必填资料后，这里会显示完整代码。</textarea>
           </div>
 
           <div class="notice-card">
             <span class="notice-icon" aria-hidden="true">!</span>
             <p>
-              “打开 ALLCPP 并立即执行”会在目标页面加载后
-              <strong>直接发起真实申请</strong>，并显示服务器回复。执行前请核对资料。
+              “点击打开ALLCPP抢摊”会在目标页面加载后
+              <strong>直接发起真实申请</strong>，并显示抢摊结果。执行前请核对资料。
             </p>
           </div>
 
           <ol class="usage-steps">
             <li><span>1</span>先在浏览器中登录 ALLCPP</li>
-            <li><span>2</span>填写资料后点击“打开 ALLCPP 并立即执行”</li>
+            <li><span>2</span>填写资料后点击“点击打开ALLCPP抢摊”</li>
             <li><span>3</span>在目标页面查看执行结果提示框</li>
           </ol>
         </section>
       </div>
 
       <footer>
-        <p>页面不联网；输入会保存在当前浏览器本机，不会上传，也不会代替你提交申请。</p>
+        <p>页面不联网；输入会保存在当前浏览器本机。</p>
       </footer>
     </main>
 

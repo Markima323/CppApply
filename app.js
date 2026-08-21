@@ -12,11 +12,13 @@
   const clearButton = document.querySelector("#clear-button");
   const executeButton = document.querySelector("#execute-button");
   const executeButtonLabel = document.querySelector("#execute-button-label");
-  const copyButton = document.querySelector("#copy-button");
-  const copyButtonLabel = document.querySelector("#copy-button-label");
   const formMessage = document.querySelector("#form-message");
-  const preview = document.querySelector("#code-preview");
   const modeBadge = document.querySelector("#mode-badge");
+  const validationCard = document.querySelector("#validation-card");
+  const validationIcon = document.querySelector("#validation-icon");
+  const validationTitle = document.querySelector("#validation-title");
+  const validationDescription = document.querySelector("#validation-description");
+  const validationList = document.querySelector("#validation-list");
   const updateOnlyField = document.querySelector(".mode-only-update");
   const circleInput = document.querySelector("#circle-id");
   const identityInput = document.querySelector("#contact-identity");
@@ -28,8 +30,6 @@
       return null;
     }
   })();
-  let copiedCode = "";
-  let resetButtonTimer = 0;
   let storageWarningShown = false;
 
   function extensionAvailable() {
@@ -69,7 +69,7 @@
 
     if (!result.ok && !storageWarningShown) {
       storageWarningShown = true;
-      setMessage("浏览器阻止了本机自动保存；本次填写仍可正常生成和复制。", "error");
+      setMessage("浏览器阻止了本机自动保存；本次填写仍可正常执行抢摊。", "error");
     }
 
     return result.ok;
@@ -139,25 +139,9 @@
     });
   }
 
-  function setCopyButtonSuccess() {
-    window.clearTimeout(resetButtonTimer);
-    copyButton.classList.add("is-success");
-    copyButtonLabel.textContent = "已复制完整代码 ✓";
-    resetButtonTimer = window.setTimeout(() => {
-      copyButton.classList.remove("is-success");
-      copyButtonLabel.textContent = "仅生成并复制代码";
-    }, 2200);
-  }
-
   function markContentChanged() {
-    copyButton.classList.remove("is-success");
-    copyButtonLabel.textContent = "仅生成并复制代码";
-
-    if (copiedCode) {
-      setMessage("资料已更改，请重新生成并复制代码。", "info");
-      copiedCode = "";
-    } else if (formMessage.classList.contains("is-success")) {
-      setMessage("", "");
+    if (formMessage.classList.contains("is-success")) {
+      setMessage("资料已更改，请重新执行抢摊。", "info");
     }
   }
 
@@ -168,75 +152,58 @@
     circleInput.required = isUpdate;
     modeBadge.textContent = generator.MODE_META[mode].label;
     clearFieldError("circleid");
-    refreshPreview();
+    updateValidationSummary();
   }
 
-  function refreshPreview() {
-    const mode = currentMode();
-    const validation = generator.validateInput(mode, readValues());
+  function updateValidationSummary(precomputedValidation) {
+    const validation =
+      precomputedValidation || generator.validateInput(currentMode(), readValues());
+    validationList.replaceChildren();
 
-    if (!validation.valid) {
-      preview.value = `// 当前模式：${generator.MODE_META[mode].label}\n// 填写全部必填资料后，这里会显示完整代码。`;
-      return null;
+    if (validation.valid) {
+      validationCard.classList.remove("is-incomplete");
+      validationCard.classList.add("is-ready");
+      validationIcon.textContent = "✓";
+      validationTitle.textContent = "资料填写完成";
+      validationDescription.textContent =
+        "所有必填信息格式正确，现在可以点击“点击打开ALLCPP抢摊”运行。";
+      validationList.hidden = true;
+      return validation;
     }
 
-    const code = generator.generateCode(mode, validation.values);
-    preview.value = code;
-    return code;
-  }
+    const errorMessages = Object.values(validation.errors);
+    validationCard.classList.add("is-incomplete");
+    validationCard.classList.remove("is-ready");
+    validationIcon.textContent = "!";
+    validationTitle.textContent = `还需检查 ${errorMessages.length} 项信息`;
+    validationDescription.textContent = "请补充缺失信息或修正格式：";
+    validationList.hidden = false;
 
-  function legacyCopy(text) {
-    const helper = document.createElement("textarea");
-    helper.value = text;
-    helper.setAttribute("readonly", "");
-    helper.style.position = "fixed";
-    helper.style.left = "-9999px";
-    helper.style.top = "0";
-    document.body.appendChild(helper);
-    helper.focus();
-    helper.select();
-
-    let copied = false;
-    try {
-      copied = document.execCommand("copy");
-    } finally {
-      helper.remove();
+    for (const message of errorMessages) {
+      const item = document.createElement("li");
+      item.textContent = message;
+      validationList.appendChild(item);
     }
 
-    return copied;
-  }
-
-  async function copyText(text) {
-    if (navigator.clipboard && window.isSecureContext) {
-      try {
-        await navigator.clipboard.writeText(text);
-        return true;
-      } catch {
-        // 浏览器拒绝 Clipboard API 时继续尝试兼容方案。
-      }
-    }
-
-    return legacyCopy(text);
+    return validation;
   }
 
   function prepareExecution() {
     const mode = currentMode();
     const validation = generator.validateInput(mode, readValues());
     showErrors(validation.errors);
+    updateValidationSummary(validation);
 
     if (!validation.valid) {
       const count = Object.keys(validation.errors).length;
       setMessage(`还有 ${count} 项资料需要检查。`, "error");
       const firstInvalid = form.querySelector('[aria-invalid="true"]');
       if (firstInvalid) firstInvalid.focus();
-      refreshPreview();
       return null;
     }
 
-    const code = generator.generateCode(mode, validation.values);
-    preview.value = code;
     saveFormDefaults();
-    return { mode, validation, code };
+    return { mode, validation };
   }
 
   function requestExtensionExecution(mode, values) {
@@ -264,7 +231,7 @@
     if (!prepared) return;
 
     if (!extensionAvailable()) {
-      setMessage("自动执行需要先把当前目录加载为 Chrome 扩展。复制功能仍可正常使用。", "error");
+      setMessage("抢摊功能需要先把当前目录加载为 Chrome 扩展。", "error");
       return;
     }
 
@@ -285,37 +252,20 @@
       const success = response.result && response.result.success;
       setMessage(
         success === true
-          ? "ALLCPP 返回申请成功，详细结果已显示在目标页面。"
-          : "执行已经结束，详细回复已显示在目标页面。",
+          ? "ALLCPP 返回抢摊成功，抢摊结果已显示在目标页面。"
+          : "执行已经结束，抢摊结果已显示在目标页面。",
         success === true ? "success" : "info"
       );
     } catch (error) {
       setMessage(`自动执行失败：${error.message}`, "error");
     } finally {
       executeButton.disabled = false;
-      executeButtonLabel.textContent = "打开 ALLCPP 并立即执行";
+      executeButtonLabel.textContent = "点击打开ALLCPP抢摊";
     }
   });
 
-  form.addEventListener("submit", async (event) => {
+  form.addEventListener("submit", (event) => {
     event.preventDefault();
-    const prepared = prepareExecution();
-    if (!prepared) return;
-    const copied = await copyText(prepared.code);
-
-    if (copied) {
-      copiedCode = prepared.code;
-      setCopyButtonSuccess();
-      setMessage(
-        `已复制“${generator.MODE_META[prepared.mode].label}”完整代码。`,
-        "success"
-      );
-      return;
-    }
-
-    preview.focus();
-    preview.select();
-    setMessage("浏览器未允许自动复制，代码已全选，请按 Ctrl+C 手动复制。", "error");
   });
 
   form.addEventListener("input", (event) => {
@@ -325,7 +275,7 @@
     }
     markContentChanged();
     saveFormDefaults();
-    refreshPreview();
+    updateValidationSummary();
   });
 
   form.addEventListener("change", (event) => {
@@ -340,7 +290,6 @@
     const storageCleared = preferences.clearDefaults(browserStorage);
     form.reset();
     clearErrors();
-    copiedCode = "";
     setMessage(
       storageCleared.ok
         ? "已清空表单，并删除当前浏览器保存的默认资料。"
@@ -370,6 +319,6 @@
   if (restoreState.restored) {
     setMessage("已自动载入上次保存的默认资料。", "success");
   } else if (restoreState.unavailable) {
-    setMessage("浏览器阻止了本机自动保存；填写和复制功能仍可正常使用。", "error");
+    setMessage("浏览器阻止了本机自动保存；填写和抢摊功能仍可正常使用。", "error");
   }
 })();

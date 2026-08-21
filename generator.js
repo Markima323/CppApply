@@ -115,7 +115,7 @@
     const errors = {};
 
     if (!isSafePositiveInteger(values.eventMainId)) {
-      errors.eventMainId = "请输入有效的活动主页 ID，或粘贴带 event 参数的活动链接。";
+      errors.eventMainId = "请输入有效的 ALLCPP 活动主页链接，或直接填写活动 ID。";
     }
 
     if (!POSITIVE_INTEGER_PATTERN.test(values.doujinshiid)) {
@@ -244,7 +244,7 @@
     return [
       "(async () => {",
       "  // =========================================================",
-      "  // ① 配置区（由 ALLCPP 申摊代码生成器生成）",
+      "  // ① 配置区（由 ALLCPP自动申摊器生成）",
       "  // =========================================================",
       "",
       `  const eventMainId = ${values.eventMainId};`,
