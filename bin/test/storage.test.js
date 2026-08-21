@@ -6,7 +6,7 @@ const {
   loadDefaults,
   saveDefaults,
   clearDefaults
-} = require("../storage.js");
+} = require("../../ALLCPPApply/storage.js");
 
 function createMemoryStorage() {
   const data = new Map();

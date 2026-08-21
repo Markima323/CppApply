@@ -3,8 +3,10 @@ const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
 
-const root = path.resolve(__dirname, "..");
-const manifest = JSON.parse(fs.readFileSync(path.join(root, "manifest.json"), "utf8"));
+const extensionRoot = path.resolve(__dirname, "..", "..", "ALLCPPApply");
+const manifest = JSON.parse(
+  fs.readFileSync(path.join(extensionRoot, "manifest.json"), "utf8")
+);
 
 test("Chrome 扩展使用 Manifest V3 和后台 Service Worker", () => {
   assert.equal(manifest.manifest_version, 3);
@@ -20,13 +22,20 @@ test("扩展仅声明执行流程需要的权限和 ALLCPP 域名", () => {
 
 test("扩展入口和注入脚本均存在", () => {
   for (const file of ["index.html", "background.js", "extension-runner.js"]) {
-    assert.equal(fs.existsSync(path.join(root, file)), true, `${file} 不存在`);
+    assert.equal(
+      fs.existsSync(path.join(extensionRoot, file)),
+      true,
+      `${file} 不存在`
+    );
   }
 });
 
 test("面板只包含自动执行按钮且不使用字符串 eval 注入", () => {
-  const html = fs.readFileSync(path.join(root, "index.html"), "utf8");
-  const background = fs.readFileSync(path.join(root, "background.js"), "utf8");
+  const html = fs.readFileSync(path.join(extensionRoot, "index.html"), "utf8");
+  const background = fs.readFileSync(
+    path.join(extensionRoot, "background.js"),
+    "utf8"
+  );
 
   assert.match(html, /id="execute-button"/);
   assert.match(html, /点击打开ALLCPP抢摊/);
@@ -38,7 +47,10 @@ test("面板只包含自动执行按钮且不使用字符串 eval 注入", () =>
 });
 
 test("完成后的结果框只展示指定的三项结果", () => {
-  const runner = fs.readFileSync(path.join(root, "extension-runner.js"), "utf8");
+  const runner = fs.readFileSync(
+    path.join(extensionRoot, "extension-runner.js"),
+    "utf8"
+  );
 
   assert.match(runner, /操作类型：/);
   assert.match(runner, /活动名称：/);
@@ -48,7 +60,10 @@ test("完成后的结果框只展示指定的三项结果", () => {
 });
 
 test("完成结果框包含申摊结果页面入口", () => {
-  const runner = fs.readFileSync(path.join(root, "extension-runner.js"), "utf8");
+  const runner = fs.readFileSync(
+    path.join(extensionRoot, "extension-runner.js"),
+    "utf8"
+  );
 
   assert.match(runner, /点击查看申摊结果/);
   assert.match(runner, /https:\/\/www\.allcpp\.cn\/mng\/apply\.do\?t=1&pageNo=1/);

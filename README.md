@@ -9,14 +9,14 @@
 
 1. 打开 Chrome 的 `chrome://extensions/`。
 2. 打开右上角“开发者模式”。
-3. 点击“加载已解压的扩展程序”，选择本项目目录。
+3. 点击“加载已解压的扩展程序”，选择项目中的 `ALLCPPApply` 文件夹。
 4. 点击浏览器工具栏中的“ALLCPP自动申摊器”，扩展会在新标签页打开面板。
 
 扩展仅申请 `tabs`、`scripting` 和 `https://www.allcpp.cn/*` 权限，用于打开目标页面并执行申请代码。
 
 ## 使用方法
 
-1. 双击打开 `index.html`。
+1. 在 Chrome 工具栏中点击“ALLCPP自动申摊器”打开面板。
 2. 选择“申摊”或“已退摊更新为申请”。
 3. 填写活动、账号和联系人资料。
 4. 先在浏览器中登录 ALLCPP，再点击按钮“点击打开ALLCPP抢摊”。
@@ -49,10 +49,15 @@ https://www.allcpp.cn/allcpp/event/event.do?event=7214
 
 ## 开发验证
 
-项目没有第三方依赖。安装 Node.js 后可运行：
+项目根目录保留 `README.md`、`.gitignore` 和以下两个文件夹：
+
+- `ALLCPPApply`：Chrome 加载的完整扩展目录。
+- `bin`：说明文档、测试和其他开发文件。
+
+项目没有第三方依赖。安装 Node.js 后，在项目根目录运行：
 
 ```powershell
-node --test
+node --test bin/test/*.test.js
 ```
 
-也可以在允许执行 npm 脚本的终端中运行 `npm test`。
+也可以先进入 `bin`，再在允许执行 npm 脚本的终端中运行 `npm test`。

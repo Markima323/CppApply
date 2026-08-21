@@ -6,7 +6,7 @@ const {
   extractAllcppPathId,
   validateInput,
   generateCode
-} = require("../generator.js");
+} = require("../../ALLCPPApply/generator.js");
 
 const validValues = {
   eventMainId: "7214",
